@@ -91,7 +91,7 @@ class PalettePreview(Gtk.VBox):
         self.label = Gtk.Label()
         self.label.set_use_markup(True)
         self.label.set_property("name", "label")
-        self.label.set_text('Click a button below to find the nearest known color')
+        self.label.set_text('Click a button below for colour details')
         self.pack_start(self.label, True, True, 10)
         self.palette = palette(common.image_path)
         self.all_buttons = []
@@ -159,9 +159,13 @@ class Toolbar(Gtk.HBox):
     def __init__(self):
         super().__init__()
         self.set_spacing(5)
-        open_button = Gtk.Button.new_with_label("Select image")
-        self.add(open_button)
-        open_button.connect_after('clicked', self.on_open_button)
+
+        button = Gtk.Button.new_with_label("Palette size")
+        self.pack_start(button, False, False, 0)
+
+        button = Gtk.Button.new_with_label("Select image")
+        self.add(button)
+        button.connect_after('clicked', self.on_open_button)
 
     def on_open_button(self, button):
         dialog = Gtk.FileChooserDialog(title='Select image', parent=button.get_toplevel(),

@@ -11,10 +11,11 @@ from color_tools import get_colour_name, hex_to_rgb, rgb_to_cmyk
 
 
 def scaled_pixbuf(path):
+    preview_max_height = int(common.preview_max_width * 0.5625)
     pillow_image = Image.open(path)
     w, h = pillow_image.size
-    ratio = min(720 / w, 480 / h)
-    if w > 720 or h > 480:
+    ratio = min(common.preview_max_width / w, preview_max_height / h)
+    if w > common.preview_max_width or h > preview_max_height:
         w = w * ratio
         h = h * ratio
         pillow_image.thumbnail((w, h), Image.ANTIALIAS)
@@ -52,20 +53,23 @@ class Preview(Gtk.VBox):
         super().__init__()
         common.image_path = os.path.join(common.images_path, 'wallhaven-73mry3.jpg')
 
-        self.label = Gtk.Label()
-        self.label.set_text(common.image_path)
-        self.pack_start(self.label, True, True, 0)
-
         self.image = Gtk.Image()
         pixbuf = scaled_pixbuf(common.image_path)
         self.image.set_from_pixbuf(pixbuf)
         self.set_spacing(5)
         self.set_border_width(15)
-        self.add(self.image)
+        self.pack_start(self.image, True, True, 0)
+
+        self.label = Gtk.Label()
+        self.label.set_property("name", "label")
+        self.label.set_text(common.image_path)
+        self.pack_start(self.label, True, True, 10)
+
+        self.toolbar = Toolbar()
+        self.pack_start(self.toolbar, False, False, 0)
+
         self.palette_preview = PalettePreview()
         self.add(self.palette_preview)
-        self.toolbar = Toolbar()
-        self.add(self.toolbar)
 
     def refresh(self):
         self.label.set_text(common.image_path)
@@ -74,22 +78,19 @@ class Preview(Gtk.VBox):
         self.image.set_from_pixbuf(pixbuf)
 
         self.palette_preview.destroy()
-        self.toolbar.destroy()
         self.palette_preview = PalettePreview()
-        self.toolbar = Toolbar()
         self.palette_preview.show_all()
-        self.toolbar.show_all()
         self.add(self.palette_preview)
-        self.add(self.toolbar)
 
 
 class PalettePreview(Gtk.VBox):
     def __init__(self):
         super().__init__()
         self.set_spacing(5)
-        self.set_border_width(15)
+        #self.set_border_width(15)
         self.label = Gtk.Label()
         self.label.set_use_markup(True)
+        self.label.set_property("name", "label")
         self.label.set_text('Click a button below to find the nearest known color')
         self.pack_start(self.label, True, True, 10)
         self.palette = palette(common.image_path)
@@ -98,20 +99,24 @@ class PalettePreview(Gtk.VBox):
         for i in range(4):
             hbox = Gtk.HBox()
             for j in range(6):
-                color = self.palette[index]
-                pixbuf = color_image((80, 30), color)
-                image = Gtk.Image.new_from_pixbuf(pixbuf)
-                button = Gtk.Button.new_with_label(rgb_to_hex(color))
-                button.set_always_show_image(True)
-                button.set_image(image)
-                button.set_image_position(2)
-                button.connect('clicked', self.on_button_press)
-                self.all_buttons.append(button)
-                label = Gtk.Label()
-                label.set_text(str(color))
-                hbox.add(button)
-                index += 1
-            self.add(hbox)
+                try:
+                    color = self.palette[index]
+                    pixbuf = color_image((80, 30), color)
+                    image = Gtk.Image.new_from_pixbuf(pixbuf)
+                    button = Gtk.Button.new_with_label(rgb_to_hex(color))
+                    button.set_always_show_image(True)
+                    button.set_image(image)
+                    button.set_image_position(2)
+                    button.set_property("name", "color-btn")
+                    button.connect('clicked', self.on_button_press)
+                    self.all_buttons.append(button)
+                    label = Gtk.Label()
+                    label.set_text(str(color))
+                    hbox.pack_start(button, True, False, 0)
+                    index += 1
+                except IndexError:
+                    break
+            self.pack_start(hbox, True, True, 0)
 
     def on_button_press(self, button):
         # mark all buttons unselected
@@ -138,23 +143,22 @@ class PalettePreview(Gtk.VBox):
         self.label.set_selectable(True)
 
         if exact_name:
-            label_name = 'Exact name: {}'.format(exact_name)
+            label_name = 'Exact: {}'.format(exact_name)
         else:
-            label_name = 'Nearest known name: {}'.format(closest_name)
+            label_name = 'Nearest: {}'.format(closest_name)
 
         if exact_pantone:
-            label_pantone = 'Exact Pantone C: {}'.format(exact_pantone)
+            label_pantone = 'Exact Pantone: {}'.format(exact_pantone)
         else:
-            label_pantone = 'Nearest Pantone C: {}'.format(closest_pantone)
+            label_pantone = 'Nearest Pantone: {}'.format(closest_pantone)
 
-        self.label.set_markup('{} {} {} {} | {} | {}'.format(c, m, y, k, label_name, label_pantone))
+        self.label.set_markup('{} | {} {} {} {} | {} | {}'.format(button.get_label(), c, m, y, k, label_name, label_pantone))
 
 
 class Toolbar(Gtk.HBox):
     def __init__(self):
         super().__init__()
         self.set_spacing(5)
-        self.set_border_width(15)
         open_button = Gtk.Button.new_with_label("Select image")
         self.add(open_button)
         open_button.connect_after('clicked', self.on_open_button)
@@ -163,13 +167,18 @@ class Toolbar(Gtk.HBox):
         dialog = Gtk.FileChooserDialog(title='Select image', parent=button.get_toplevel(),
                                        action=Gtk.FileChooserAction.OPEN)
         filter = Gtk.FileFilter()
-        filter.set_name('.jpg .jpeg .png')
+        filter.set_name('jpg/png')
         filter.add_pattern("*.png")
+        filter.add_pattern("*.PNG")
         filter.add_pattern("*.jpg")
+        filter.add_pattern("*.JPG")
         filter.add_pattern("*.jpeg")
+        filter.add_pattern("*.JPEG")
         dialog.add_filter(filter)
 
-        dialog.set_current_folder(os.path.expanduser("~"))
+        #dialog.set_current_folder(os.path.expanduser("~"))
+        if common.last_folder:
+            dialog.set_current_folder(common.last_folder)
         dialog.add_button(Gtk.STOCK_CANCEL, 0)
         dialog.add_button(Gtk.STOCK_OK, 1)
         dialog.set_default_response(1)
@@ -180,9 +189,11 @@ class Toolbar(Gtk.HBox):
             common.image_path = dialog.get_filename()
             common.preview.refresh()
             text = common.images_path
-            if len(text) > 40:
+            """if len(text) > 40:
                 text = '…{}'.format(text[-38::])
-            button.set_label(text)
+            button.set_label(text)"""
+            
+            common.last_folder = os.path.split(common.image_path)[0]
 
         dialog.destroy()
 
@@ -190,7 +201,7 @@ class Toolbar(Gtk.HBox):
 class GUI:
     def __init__(self):
         window = Gtk.Window()
-        window.set_title("I'm a GTK+ window on Win10 :P")
+        window.set_title('Azote Palettes')
         icon = GdkPixbuf.Pixbuf.new_from_file(os.path.join(common.images_path, 'azote.png'))
         window.set_default_icon(icon)
         window.connect_after('destroy', destroy)
@@ -218,15 +229,18 @@ def main():
     css = b"""
                 button#color-btn {
                 font-weight: normal;
-                font-size: 11px;
+                font-size: 13px;
                 }
                 button#color-btn-selected {
                     font-weight: bold;
-                    font-size: 12px;
+                    font-size: 13px;
                     border-top: 1px solid #ccc;
                     border-left: 1px solid #ccc;
                     border-bottom: 1px solid #333;
                     border-right: 1px solid #333;
+                }
+                label#label {
+                    font-size: 13px;
                 }
                 """
     provider.load_from_data(css)

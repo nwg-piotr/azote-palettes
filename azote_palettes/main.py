@@ -1,3 +1,13 @@
+#!/usr/bin/env python3
+# _*_ coding: utf-8 _*_
+
+"""
+Colour palette creator and colour names dictionary
+Author: Piotr Miller
+e-mail: nwg.piotr@gmail.com
+Website: https://github.com/nwg-piotr/azote-palettes
+License: GPL-3.0-or-later
+"""
 import sys
 import os
 import gi

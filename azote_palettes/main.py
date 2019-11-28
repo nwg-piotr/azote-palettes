@@ -41,7 +41,7 @@ def color_image(size, color):
 
 def palette(image_path):
     color_thief = ColorThief(image_path)
-    return color_thief.get_palette(color_count=25, quality=10)
+    return color_thief.get_palette(color_count=common.num_colors + 1, quality=10)
 
 
 def rgb_to_hex(rgb):
@@ -51,7 +51,7 @@ def rgb_to_hex(rgb):
 class Preview(Gtk.VBox):
     def __init__(self):
         super().__init__()
-        common.image_path = os.path.join(common.images_path, 'wallhaven-73mry3.jpg')
+        common.image_path = os.path.join(common.images_path, 'welcome.jpg')
 
         self.image = Gtk.Image()
         pixbuf = scaled_pixbuf(common.image_path)
@@ -87,7 +87,6 @@ class PalettePreview(Gtk.VBox):
     def __init__(self):
         super().__init__()
         self.set_spacing(5)
-        #self.set_border_width(15)
         self.label = Gtk.Label()
         self.label.set_use_markup(True)
         self.label.set_property("name", "label")
@@ -96,7 +95,7 @@ class PalettePreview(Gtk.VBox):
         self.palette = palette(common.image_path)
         self.all_buttons = []
         index = 0
-        for i in range(4):
+        for i in range(common.num_colors // 6):
             hbox = Gtk.HBox()
             for j in range(6):
                 try:
@@ -160,13 +159,44 @@ class Toolbar(Gtk.HBox):
         super().__init__()
         self.set_spacing(5)
 
-        button = Gtk.Button.new_with_label("Palette size")
+        button = Gtk.Button.new_with_label("Palette size ({})".format(common.num_colors))
         self.pack_start(button, False, False, 0)
+        button.connect_after('clicked', self.on_size_button)
 
         button = Gtk.Button.new_with_label("Select image")
         self.add(button)
         button.connect_after('clicked', self.on_open_button)
 
+    def on_size_button(self, button):
+        menu = Gtk.Menu()
+        item = Gtk.MenuItem.new_with_label('6 colors')
+        item.connect('activate', self.on_size_menu_item, button, 6)
+        menu.append(item)
+        item = Gtk.MenuItem.new_with_label('12 colors')
+        item.connect('activate', self.on_size_menu_item, button, 12)
+        menu.append(item)
+        item = Gtk.MenuItem.new_with_label('18 colors')
+        item.connect('activate', self.on_size_menu_item, button, 18)
+        menu.append(item)
+        item = Gtk.MenuItem.new_with_label('24 colors')
+        item.connect('activate', self.on_size_menu_item, button, 24)
+        menu.append(item)
+        item = Gtk.MenuItem.new_with_label('30 colors')
+        item.connect('activate', self.on_size_menu_item, button, 30)
+        menu.append(item)
+        item = Gtk.MenuItem.new_with_label('36 colors')
+        item.connect('activate', self.on_size_menu_item, button, 36)
+        menu.append(item)
+
+        menu.show_all()
+        menu.popup_at_widget(button, Gdk.Gravity.WEST, Gdk.Gravity.SOUTH_WEST, None)
+        
+    def on_size_menu_item(self, item, button, number):
+        print(number)
+        common.num_colors = number
+        common.preview.refresh()
+        button.set_label("Palette size ({})".format(common.num_colors))
+    
     def on_open_button(self, button):
         dialog = Gtk.FileChooserDialog(title='Select image', parent=button.get_toplevel(),
                                        action=Gtk.FileChooserAction.OPEN)
@@ -192,10 +222,6 @@ class Toolbar(Gtk.HBox):
         if response == 1:
             common.image_path = dialog.get_filename()
             common.preview.refresh()
-            text = common.images_path
-            """if len(text) > 40:
-                text = '…{}'.format(text[-38::])
-            button.set_label(text)"""
             
             common.last_folder = os.path.split(common.image_path)[0]
 

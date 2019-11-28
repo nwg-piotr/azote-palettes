@@ -3,8 +3,7 @@ import os
 import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, GdkPixbuf, Gdk, GLib
-from gi.repository.GdkPixbuf import InterpType
-from PIL import Image, ImageOps
+from PIL import Image
 from colorthief import ColorThief
 import common
 from color_tools import get_colour_name, hex_to_rgb, rgb_to_cmyk

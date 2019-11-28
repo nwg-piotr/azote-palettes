@@ -13,7 +13,7 @@ setup(
     name='azote-palettes',
     version='0.1.1',
     description='Colour palette creator and colour names dictionary',
-    packages=['azote-palettes'],
+    packages=['azote_palettes'],
     include_package_data=True,
     url='https://github.com/nwg-piotr/azote-palettes',
     license='GPL3',

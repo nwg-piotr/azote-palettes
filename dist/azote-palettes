@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+cd /usr/lib/python3.8/site-packages/azote-palettes
+exec /usr/bin/python3 main.py "$@"

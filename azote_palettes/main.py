@@ -10,6 +10,7 @@ License: GPL-3.0-or-later
 """
 import sys
 import os
+import platform
 import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, GdkPixbuf, Gdk, GLib
@@ -241,7 +242,10 @@ class GUI:
     def __init__(self):
         window = Gtk.Window()
         window.set_title('Azote Palettes')
-        icon = GdkPixbuf.Pixbuf.new_from_file(os.path.join(common.images_path, 'azote.png'))
+        if platform.system().upper() == 'WINDOWS':
+            icon = GdkPixbuf.Pixbuf.new_from_file(os.path.join(common.images_path, 'azote.png'))
+        else:
+            icon = GdkPixbuf.Pixbuf.new_from_file(os.path.join(common.images_path, 'azote-palettes.svg'))
         window.set_default_icon(icon)
         window.connect_after('destroy', destroy)
 

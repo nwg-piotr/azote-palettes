@@ -11,6 +11,7 @@ License: GPL-3.0-or-later
 import sys
 import os
 import platform
+import tempfile
 import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, GdkPixbuf, Gdk, GLib
@@ -19,10 +20,29 @@ from colorthief import ColorThief
 import common
 from color_tools import get_colour_name, hex_to_rgb, rgb_to_cmyk
 
+windows = platform.system().upper() == 'WINDOWS'
+if windows:
+    from PIL import ImageGrab
+    clipboard = ImageGrab.grabclipboard()
+
 
 def scaled_pixbuf(path):
     preview_max_height = int(common.preview_max_width * 0.5625)
     pillow_image = Image.open(path)
+    w, h = pillow_image.size
+    ratio = min(common.preview_max_width / w, preview_max_height / h)
+    if w > common.preview_max_width or h > preview_max_height:
+        w = w * ratio
+        h = h * ratio
+        pillow_image.thumbnail((w, h), Image.ANTIALIAS)
+    data = pillow_image.tobytes()
+    data = GLib.Bytes.new(data)
+    return GdkPixbuf.Pixbuf.new_from_data(data.get_data(), GdkPixbuf.Colorspace.RGB, False, 8,
+                                          pillow_image.width, pillow_image.height,
+                                          len(pillow_image.getbands()) * pillow_image.width, None, None)
+
+def scaled_clipboard(pillow_image):
+    preview_max_height = int(common.preview_max_width * 0.5625)
     w, h = pillow_image.size
     ratio = min(common.preview_max_width / w, preview_max_height / h)
     if w > common.preview_max_width or h > preview_max_height:
@@ -81,11 +101,15 @@ class Preview(Gtk.VBox):
         self.palette_preview = PalettePreview()
         self.add(self.palette_preview)
 
-    def refresh(self):
-        self.label.set_text(common.image_path)
-
-        pixbuf = scaled_pixbuf(common.image_path)
-        self.image.set_from_pixbuf(pixbuf)
+    def refresh(self, clip=False):
+        if not clip:
+            self.label.set_text(common.image_path)
+            pixbuf = scaled_pixbuf(common.image_path)
+            self.image.set_from_pixbuf(pixbuf)
+        else:
+            self.label.set_text('pasted image')
+            pixbuf = scaled_clipboard(clipboard)
+            self.image.set_from_pixbuf(pixbuf)
 
         self.palette_preview.destroy()
         self.palette_preview = PalettePreview()
@@ -177,6 +201,14 @@ class Toolbar(Gtk.HBox):
         self.add(button)
         button.connect_after('clicked', self.on_open_button)
 
+        if windows:
+            button = Gtk.Button.new_with_label("Paste image")
+            button.set_sensitive(clipboard)
+            self.pack_start(button, False, False, 0)
+            button.connect_after('clicked', self.on_paste_button)
+
+
+
     def on_size_button(self, button):
         menu = Gtk.Menu()
         item = Gtk.MenuItem.new_with_label('6 colors')
@@ -231,11 +263,20 @@ class Toolbar(Gtk.HBox):
         response = dialog.run()
         if response == 1:
             common.image_path = dialog.get_filename()
-            common.preview.refresh()
-            
+            common.preview.refresh(clip=False)
             common.last_folder = os.path.split(common.image_path)[0]
-
         dialog.destroy()
+
+    def on_paste_button(self, button):
+        if clipboard:
+            pixbuf = scaled_clipboard(clipboard)
+            common.preview.image.set_from_pixbuf(pixbuf)
+            tmp_file = os.path.join(tempfile.gettempdir(), 'clipboard.png')
+            print(tmp_file)
+            clipboard.save(tmp_file, 'PNG')
+            common.preview.label.set_text(tmp_file)
+            common.image_path = tmp_file
+            common.preview.refresh()
 
 
 class GUI:

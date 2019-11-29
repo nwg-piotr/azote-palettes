@@ -243,7 +243,7 @@ class GUI:
         window = Gtk.Window()
         window.set_title('Azote Palettes')
         if platform.system().upper() == 'WINDOWS':
-            icon = GdkPixbuf.Pixbuf.new_from_file(os.path.join(common.images_path, 'azote.png'))
+            icon = GdkPixbuf.Pixbuf.new_from_file(os.path.join(common.images_path, 'azote-palettes.png'))
         else:
             icon = GdkPixbuf.Pixbuf.new_from_file(os.path.join(common.images_path, 'azote-palettes.svg'))
         window.set_default_icon(icon)

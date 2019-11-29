@@ -8,9 +8,9 @@ url="https://github.com/nwg-piotr/azote-palettes"
 license=('GPL3')
 depends=('python' 'python-setuptools' 'python-gobject' 'python-pillow' 'python-colorthief' 'gtk3')
 
-source=("https://github.com/nwg-piotr/azote-palettes/archive/v0.1.1.tar.gz")
+source=("https://github.com/nwg-piotr/azote-palettes/archive/v"$pkgver".tar.gz")
 
-md5sums=('ba79e032b99d8f4a632ba8f6e5417495')
+md5sums=('7b2dad2e276313cb066eaa042a38786d')
 
 package() {
   install -D -m 755 "$pkgname"-"$pkgver"/dist/azote-palettes "$pkgdir"/usr/bin/azote-palettes
@@ -20,4 +20,3 @@ package() {
   cd "$srcdir/$pkgname-$pkgver"
   /usr/bin/python setup.py install --root="$pkgdir/" --optimize=1
 }
-

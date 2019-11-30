@@ -10,6 +10,7 @@ License: GPL-3.0-or-later
 """
 import sys
 import os
+import subprocess
 import platform
 import tempfile
 import gi
@@ -20,10 +21,40 @@ from colorthief import ColorThief
 import common
 from color_tools import get_colour_name, hex_to_rgb, rgb_to_cmyk
 
-windows = platform.system().upper() == 'WINDOWS'
-if windows:
+tmp_file = os.path.join(tempfile.gettempdir(), 'azote-clipboard.png')
+
+# I have no Mac in range to check if it works there!
+image_grab = platform.system().upper() == 'WINDOWS' or platform.system().upper() == 'DARWIN'
+wl_clipboard = False    # this is to check if we're on sway and wl-clipboard works
+
+if image_grab:
     from PIL import ImageGrab
-    clipboard = ImageGrab.grabclipboard()
+    
+else:
+    try:
+        sway = subprocess.run(['swaymsg', '-t', 'get_seats'], stdout=subprocess.DEVNULL).returncode == 0
+        clip = subprocess.run(['wl-paste', '-v'], stdout=subprocess.DEVNULL).returncode == 0
+        wl_clipboard = sway and clip
+    except:
+        pass
+
+
+def save_clipboard():
+    if image_grab:
+        clipboard = ImageGrab.grabclipboard()
+        if clipboard:
+            clipboard.save(tmp_file, 'PNG')
+    
+    elif wl_clipboard:
+        wl_clipboard_not_empty = subprocess.run(['wl-paste', '-l'], stdout=subprocess.DEVNULL).returncode == 0
+        if wl_clipboard_not_empty:
+            types = subprocess.check_output('wl-paste -l', shell=True).decode("utf-8")
+
+            if 'image/png' in types:
+                if os.path.exists(tmp_file):
+                    os.remove(tmp_file)
+                subprocess.check_output('wl-paste > {}'.format(tmp_file), shell=True)
+                subprocess.check_output('wl-copy -c', shell=True)
 
 
 def scaled_pixbuf(path):
@@ -102,14 +133,9 @@ class Preview(Gtk.VBox):
         self.add(self.palette_preview)
 
     def refresh(self, clip=False):
-        if not clip:
-            self.label.set_text(common.image_path)
-            pixbuf = scaled_pixbuf(common.image_path)
-            self.image.set_from_pixbuf(pixbuf)
-        else:
-            self.label.set_text('pasted image')
-            pixbuf = scaled_clipboard(clipboard)
-            self.image.set_from_pixbuf(pixbuf)
+        self.label.set_text(common.image_path)
+        pixbuf = scaled_pixbuf(common.image_path)
+        self.image.set_from_pixbuf(pixbuf)
 
         self.palette_preview.destroy()
         self.palette_preview = PalettePreview()
@@ -201,12 +227,10 @@ class Toolbar(Gtk.HBox):
         self.add(button)
         button.connect_after('clicked', self.on_open_button)
 
-        if windows:
+        if image_grab or wl_clipboard:
             button = Gtk.Button.new_with_label("Paste image")
-            button.set_sensitive(clipboard)
             self.pack_start(button, False, False, 0)
             button.connect_after('clicked', self.on_paste_button)
-
 
 
     def on_size_button(self, button):
@@ -234,7 +258,6 @@ class Toolbar(Gtk.HBox):
         menu.popup_at_widget(button, Gdk.Gravity.WEST, Gdk.Gravity.SOUTH_WEST, None)
         
     def on_size_menu_item(self, item, button, number):
-        print(number)
         common.num_colors = number
         common.preview.refresh()
         button.set_label("Palette size ({})".format(common.num_colors))
@@ -268,15 +291,15 @@ class Toolbar(Gtk.HBox):
         dialog.destroy()
 
     def on_paste_button(self, button):
-        if clipboard:
-            pixbuf = scaled_clipboard(clipboard)
+        save_clipboard()
+
+        global tmp_file
+        if os.path.exists(tmp_file):
+            pixbuf = scaled_pixbuf(tmp_file)
             common.preview.image.set_from_pixbuf(pixbuf)
-            tmp_file = os.path.join(tempfile.gettempdir(), 'clipboard.png')
-            print(tmp_file)
-            clipboard.save(tmp_file, 'PNG')
             common.preview.label.set_text(tmp_file)
             common.image_path = tmp_file
-            common.preview.refresh()
+            common.preview.refresh(clip=True)
 
 
 class GUI:

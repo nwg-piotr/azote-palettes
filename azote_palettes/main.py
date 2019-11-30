@@ -21,7 +21,8 @@ from colorthief import ColorThief
 import common
 from color_tools import get_colour_name, hex_to_rgb, rgb_to_cmyk
 
-tmp_file = os.path.join(tempfile.gettempdir(), 'azote-clipboard.png')
+clipboard_file = os.path.join(tempfile.gettempdir(), 'azote-clipboard.png')
+clipboard_file_scaled = os.path.join(tempfile.gettempdir(), 'azote-clipboard-scaled.png')
 
 # I have no Mac in range to check if it works there!
 image_grab = platform.system().upper() == 'WINDOWS' or platform.system().upper() == 'DARWIN'
@@ -43,7 +44,7 @@ def save_clipboard():
     if image_grab:
         clipboard = ImageGrab.grabclipboard()
         if clipboard:
-            clipboard.save(tmp_file, 'PNG')
+            clipboard.save(clipboard_file, 'PNG')
     
     elif wl_clipboard:
         wl_clipboard_not_empty = subprocess.run(['wl-paste', '-l'], stdout=subprocess.DEVNULL).returncode == 0
@@ -51,9 +52,9 @@ def save_clipboard():
             types = subprocess.check_output('wl-paste -l', shell=True).decode("utf-8")
 
             if 'image/png' in types:
-                if os.path.exists(tmp_file):
-                    os.remove(tmp_file)
-                subprocess.check_output('wl-paste > {}'.format(tmp_file), shell=True)
+                if os.path.exists(clipboard_file):
+                    os.remove(clipboard_file)
+                subprocess.check_output('wl-paste > {}'.format(clipboard_file), shell=True)
                 subprocess.check_output('wl-copy -c', shell=True)
 
 
@@ -71,6 +72,22 @@ def scaled_pixbuf(path):
     return GdkPixbuf.Pixbuf.new_from_data(data.get_data(), GdkPixbuf.Colorspace.RGB, False, 8,
                                           pillow_image.width, pillow_image.height,
                                           len(pillow_image.getbands()) * pillow_image.width, None, None)
+
+
+def scale_image(path):
+    preview_max_height = int(common.preview_max_width * 0.5625)
+    try:
+        pillow_image = Image.open(path)
+        w, h = pillow_image.size
+        ratio = min(common.preview_max_width / w, preview_max_height / h)
+        if w > common.preview_max_width or h > preview_max_height:
+            w = w * ratio
+            h = h * ratio
+            pillow_image.thumbnail((w, h), Image.ANTIALIAS)
+        pillow_image.save(clipboard_file_scaled)
+    except Exception as e:
+        print(e)
+
 
 def scaled_clipboard(pillow_image):
     preview_max_height = int(common.preview_max_width * 0.5625)
@@ -101,8 +118,11 @@ def color_image(size, color):
 
 
 def palette(image_path):
-    color_thief = ColorThief(image_path)
-    return color_thief.get_palette(color_count=common.num_colors + 1, quality=10)
+    try:
+        color_thief = ColorThief(image_path)
+        return color_thief.get_palette(color_count=common.num_colors + 1, quality=10)
+    except:
+        return None
 
 
 def rgb_to_hex(rgb):
@@ -115,8 +135,9 @@ class Preview(Gtk.VBox):
         common.image_path = os.path.join(common.images_path, 'welcome.jpg')
 
         self.image = Gtk.Image()
-        pixbuf = scaled_pixbuf(common.image_path)
-        self.image.set_from_pixbuf(pixbuf)
+        scale_image(common.image_path)
+        self.image.set_from_file(clipboard_file_scaled)
+        
         self.set_spacing(5)
         self.set_border_width(15)
         self.pack_start(self.image, True, True, 0)
@@ -134,8 +155,8 @@ class Preview(Gtk.VBox):
 
     def refresh(self, clip=False):
         self.label.set_text(common.image_path)
-        pixbuf = scaled_pixbuf(common.image_path)
-        self.image.set_from_pixbuf(pixbuf)
+        scale_image(common.image_path)
+        self.image.set_from_file(clipboard_file_scaled)
 
         self.palette_preview.destroy()
         self.palette_preview = PalettePreview()
@@ -153,29 +174,30 @@ class PalettePreview(Gtk.VBox):
         self.label.set_text('Click a button below for colour details')
         self.pack_start(self.label, True, True, 10)
         self.palette = palette(common.image_path)
-        self.all_buttons = []
-        index = 0
-        for i in range(common.num_colors // 6):
-            hbox = Gtk.HBox()
-            for j in range(6):
-                try:
-                    color = self.palette[index]
-                    pixbuf = color_image((80, 30), color)
-                    image = Gtk.Image.new_from_pixbuf(pixbuf)
-                    button = Gtk.Button.new_with_label(rgb_to_hex(color))
-                    button.set_always_show_image(True)
-                    button.set_image(image)
-                    button.set_image_position(2)
-                    button.set_property("name", "color-btn")
-                    button.connect('clicked', self.on_button_press)
-                    self.all_buttons.append(button)
-                    label = Gtk.Label()
-                    label.set_text(str(color))
-                    hbox.pack_start(button, True, False, 0)
-                    index += 1
-                except IndexError:
-                    break
-            self.pack_start(hbox, True, True, 0)
+        if self.palette:
+            self.all_buttons = []
+            index = 0
+            for i in range(common.num_colors // 6):
+                hbox = Gtk.HBox()
+                for j in range(6):
+                    try:
+                        color = self.palette[index]
+                        pixbuf = color_image((80, 30), color)
+                        image = Gtk.Image.new_from_pixbuf(pixbuf)
+                        button = Gtk.Button.new_with_label(rgb_to_hex(color))
+                        button.set_always_show_image(True)
+                        button.set_image(image)
+                        button.set_image_position(2)
+                        button.set_property("name", "color-btn")
+                        button.connect('clicked', self.on_button_press)
+                        self.all_buttons.append(button)
+                        label = Gtk.Label()
+                        label.set_text(str(color))
+                        hbox.pack_start(button, True, False, 0)
+                        index += 1
+                    except IndexError:
+                        break
+                self.pack_start(hbox, True, True, 0)
 
     def on_button_press(self, button):
         # mark all buttons unselected
@@ -293,12 +315,12 @@ class Toolbar(Gtk.HBox):
     def on_paste_button(self, button):
         save_clipboard()
 
-        global tmp_file
-        if os.path.exists(tmp_file):
-            pixbuf = scaled_pixbuf(tmp_file)
-            common.preview.image.set_from_pixbuf(pixbuf)
-            common.preview.label.set_text(tmp_file)
-            common.image_path = tmp_file
+        global clipboard_file
+        if os.path.exists(clipboard_file):
+            scale_image(clipboard_file)
+            common.preview.image.set_from_file(clipboard_file)
+            common.preview.label.set_text(clipboard_file)
+            common.image_path = clipboard_file
             common.preview.refresh(clip=True)
 
 

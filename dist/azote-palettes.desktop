@@ -11,4 +11,5 @@ Icon=/usr/share/azote-palettes/azote-palettes.svg
 Comment=Create palettes, find colours in dictionaries
 Comment[pl]=Twórz palety, znajdź kolory w słownikach
 Keywords=background;desktop;graphics;colours; colors;
-Name[pl_PL]=Azote Palety
+Name[pl]=Azote Palety
+MimeType=image/jpeg;image/jpg;image/png;

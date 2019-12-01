@@ -133,7 +133,10 @@ def rgb_to_hex(rgb):
 class Preview(Gtk.VBox):
     def __init__(self):
         super().__init__()
-        common.image_path = os.path.join(common.images_path, 'welcome.jpg')
+        if len(sys.argv) > 1 and os.path.exists(sys.argv[1]):
+            common.image_path = sys.argv[1]
+        else:
+            common.image_path = os.path.join(common.images_path, 'welcome.jpg')
 
         self.image = Gtk.Image()
         scale_image(common.image_path)

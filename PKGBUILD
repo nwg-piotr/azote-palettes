@@ -6,7 +6,7 @@ pkgdesc="Colour palette creator and colour names dictionary"
 arch=('x86_64')
 url="https://github.com/nwg-piotr/azote-palettes"
 license=('GPL3')
-depends=('python' 'python-setuptools' 'python-gobject' 'python-pillow' 'python-colorthief' 'gtk3')
+depends=('python' 'python-setuptools' 'python-gobject' 'python-pillow' 'python-colorthief' 'gtk3' 'wl-clipboard')
 
 source=("https://github.com/nwg-piotr/azote-palettes/archive/v"$pkgver".tar.gz")
 

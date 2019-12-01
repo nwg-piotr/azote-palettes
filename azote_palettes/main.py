@@ -14,6 +14,7 @@ import subprocess
 import platform
 import tempfile
 import gi
+import json
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, GdkPixbuf, Gdk, GLib
 from PIL import Image
@@ -59,11 +60,11 @@ def save_clipboard():
 
 
 def scaled_pixbuf(path):
-    preview_max_height = int(common.preview_max_width * 0.5625)
+    preview_max_height = int(common.rc['preview_max_width'] * 0.5625)
     pillow_image = Image.open(path)
     w, h = pillow_image.size
-    ratio = min(common.preview_max_width / w, preview_max_height / h)
-    if w > common.preview_max_width or h > preview_max_height:
+    ratio = min(common.rc['preview_max_width'] / w, preview_max_height / h)
+    if w > common.rc['preview_max_width'] or h > preview_max_height:
         w = w * ratio
         h = h * ratio
         pillow_image.thumbnail((w, h), Image.ANTIALIAS)
@@ -75,12 +76,12 @@ def scaled_pixbuf(path):
 
 
 def scale_image(path):
-    preview_max_height = int(common.preview_max_width * 0.5625)
+    preview_max_height = int(common.rc.preview_max_width * 0.5625)
     try:
         pillow_image = Image.open(path)
         w, h = pillow_image.size
-        ratio = min(common.preview_max_width / w, preview_max_height / h)
-        if w > common.preview_max_width or h > preview_max_height:
+        ratio = min(common.rc.preview_max_width / w, preview_max_height / h)
+        if w > common.rc.preview_max_width or h > preview_max_height:
             w = w * ratio
             h = h * ratio
             pillow_image.thumbnail((w, h), Image.ANTIALIAS)
@@ -90,10 +91,10 @@ def scale_image(path):
 
 
 def scaled_clipboard(pillow_image):
-    preview_max_height = int(common.preview_max_width * 0.5625)
+    preview_max_height = int(common.rc.preview_max_width * 0.5625)
     w, h = pillow_image.size
-    ratio = min(common.preview_max_width / w, preview_max_height / h)
-    if w > common.preview_max_width or h > preview_max_height:
+    ratio = min(common.rc.preview_max_width / w, preview_max_height / h)
+    if w > common.rc.preview_max_width or h > preview_max_height:
         w = w * ratio
         h = h * ratio
         pillow_image.thumbnail((w, h), Image.ANTIALIAS)
@@ -120,7 +121,7 @@ def color_image(size, color):
 def palette(image_path):
     try:
         color_thief = ColorThief(image_path)
-        return color_thief.get_palette(color_count=common.num_colors + 1, quality=10)
+        return color_thief.get_palette(color_count=common.rc.num_colors + 1, quality=10)
     except:
         return None
 
@@ -177,7 +178,7 @@ class PalettePreview(Gtk.VBox):
         if self.palette:
             self.all_buttons = []
             index = 0
-            for i in range(common.num_colors // 6):
+            for i in range(common.rc.num_colors // 6):
                 hbox = Gtk.HBox()
                 for j in range(6):
                     try:
@@ -241,7 +242,7 @@ class Toolbar(Gtk.HBox):
         super().__init__()
         self.set_spacing(5)
 
-        button = Gtk.Button.new_with_label("Palette size ({})".format(common.num_colors))
+        button = Gtk.Button.new_with_label("Palette size ({})".format(common.rc.num_colors))
         self.pack_start(button, False, False, 0)
         button.connect_after('clicked', self.on_size_button)
 
@@ -280,9 +281,10 @@ class Toolbar(Gtk.HBox):
         menu.popup_at_widget(button, Gdk.Gravity.WEST, Gdk.Gravity.SOUTH_WEST, None)
         
     def on_size_menu_item(self, item, button, number):
-        common.num_colors = number
+        common.rc.num_colors = number
+        common.rc.save()
         common.preview.refresh()
-        button.set_label("Palette size ({})".format(common.num_colors))
+        button.set_label("Palette size ({})".format(common.rc.num_colors))
     
     def on_open_button(self, button):
         dialog = Gtk.FileChooserDialog(title='Select image', parent=button.get_toplevel(),
@@ -345,9 +347,34 @@ def destroy(self):
     Gtk.main_quit()
 
 
+class RuntimeConfig(object):
+    def __init__(self):
+        super().__init__()
+        self.preview_max_width = 720
+        self.num_colors = 24
+
+        try:
+            with open(common.rc_path, 'r') as f:
+                rc = json.load(f)
+                self.preview_max_width = int(rc['preview_max_width'])
+                self.num_colors = int(rc['num_colors'])
+        except FileNotFoundError:
+            self.save()
+            
+    def save(self):
+        rc = {'preview_max_width': str(self.preview_max_width),
+              'num_colors': str(self.num_colors)}
+
+        with open(common.rc_path, 'w') as f:
+            json.dump(rc, f, indent=2)
+
+
 def main():
+    common.home = os.path.expanduser('~')
+    common.rc_path = os.path.join(common.home, '.azote-palettes-rc')
     common.path = os.path.dirname(os.path.abspath(__file__))
     common.images_path = os.path.join(common.path, 'images')
+    common.rc = RuntimeConfig()
 
     screen = Gdk.Screen.get_default()
     provider = Gtk.CssProvider()

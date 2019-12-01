@@ -1,6 +1,6 @@
 # Maintainer: Piotr Miller <nwg.piotr@gmail.com>
 pkgname=('azote-palettes')
-pkgver=0.1.1
+pkgver=0.2.1
 pkgrel=1
 pkgdesc="Colour palette creator and colour names dictionary"
 arch=('x86_64')

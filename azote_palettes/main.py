@@ -299,7 +299,6 @@ class Toolbar(Gtk.HBox):
         filter.add_pattern("*.JPEG")
         dialog.add_filter(filter)
 
-        #dialog.set_current_folder(os.path.expanduser("~"))
         if common.last_folder:
             dialog.set_current_folder(common.last_folder)
         dialog.add_button(Gtk.STOCK_CANCEL, 0)

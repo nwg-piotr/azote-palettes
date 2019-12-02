@@ -10,7 +10,6 @@ License: GPL-3.0-or-later
 """
 import sys
 import os
-import subprocess
 import platform
 import tempfile
 import gi
@@ -27,18 +26,9 @@ clipboard_file_scaled = os.path.join(tempfile.gettempdir(), 'azote-clipboard-sca
 
 # I have no Mac in range to check if it works there!
 image_grab = platform.system().upper() == 'WINDOWS' or platform.system().upper() == 'DARWIN'
-wl_clipboard = False    # this is to check if we're on sway and wl-clipboard works
 
 if image_grab:
     from PIL import ImageGrab
-    
-else:
-    try:
-        sway = subprocess.run(['swaymsg', '-t', 'get_seats'], stdout=subprocess.DEVNULL).returncode == 0
-        clip = subprocess.run(['wl-paste', '-v'], stdout=subprocess.DEVNULL).returncode == 0
-        wl_clipboard = sway and clip
-    except:
-        pass
 
 
 def save_clipboard():
@@ -46,33 +36,11 @@ def save_clipboard():
         clipboard = ImageGrab.grabclipboard()
         if clipboard:
             clipboard.save(clipboard_file, 'PNG')
-    
-    elif wl_clipboard:
-        wl_clipboard_not_empty = subprocess.run(['wl-paste', '-l'], stdout=subprocess.DEVNULL).returncode == 0
-        if wl_clipboard_not_empty:
-            types = subprocess.check_output('wl-paste -l', shell=True).decode("utf-8")
-
-            if 'image/png' in types:
-                if os.path.exists(clipboard_file):
-                    os.remove(clipboard_file)
-                subprocess.check_output('wl-paste > {}'.format(clipboard_file), shell=True)
-                subprocess.check_output('wl-copy -c', shell=True)
-
-
-def scaled_pixbuf(path):
-    preview_max_height = int(common.rc['preview_max_width'] * 0.5625)
-    pillow_image = Image.open(path)
-    w, h = pillow_image.size
-    ratio = min(common.rc['preview_max_width'] / w, preview_max_height / h)
-    if w > common.rc['preview_max_width'] or h > preview_max_height:
-        w = w * ratio
-        h = h * ratio
-        pillow_image.thumbnail((w, h), Image.ANTIALIAS)
-    data = pillow_image.tobytes()
-    data = GLib.Bytes.new(data)
-    return GdkPixbuf.Pixbuf.new_from_data(data.get_data(), GdkPixbuf.Colorspace.RGB, False, 8,
-                                          pillow_image.width, pillow_image.height,
-                                          len(pillow_image.getbands()) * pillow_image.width, None, None)
+    else:
+        clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
+        pixbuf = clipboard.wait_for_image()
+        if pixbuf:
+            pixbuf.savev(clipboard_file, 'png', [], [])
 
 
 def scale_image(path):
@@ -88,21 +56,6 @@ def scale_image(path):
         pillow_image.save(clipboard_file_scaled)
     except Exception as e:
         print(e)
-
-
-def scaled_clipboard(pillow_image):
-    preview_max_height = int(common.rc.preview_max_width * 0.5625)
-    w, h = pillow_image.size
-    ratio = min(common.rc.preview_max_width / w, preview_max_height / h)
-    if w > common.rc.preview_max_width or h > preview_max_height:
-        w = w * ratio
-        h = h * ratio
-        pillow_image.thumbnail((w, h), Image.ANTIALIAS)
-    data = pillow_image.tobytes()
-    data = GLib.Bytes.new(data)
-    return GdkPixbuf.Pixbuf.new_from_data(data.get_data(), GdkPixbuf.Colorspace.RGB, False, 8,
-                                          pillow_image.width, pillow_image.height,
-                                          len(pillow_image.getbands()) * pillow_image.width, None, None)
 
 
 def color_image(size, color):
@@ -253,11 +206,9 @@ class Toolbar(Gtk.HBox):
         self.add(button)
         button.connect_after('clicked', self.on_open_button)
 
-        if image_grab or wl_clipboard:
-            button = Gtk.Button.new_with_label("Paste image")
-            self.pack_start(button, False, False, 0)
-            button.connect_after('clicked', self.on_paste_button)
-
+        button = Gtk.Button.new_with_label("Paste image")
+        self.pack_start(button, False, False, 0)
+        button.connect_after('clicked', self.on_paste_button)
 
     def on_size_button(self, button):
         menu = Gtk.Menu()
@@ -374,8 +325,8 @@ class RuntimeConfig(object):
 def main():
     common.home = os.path.expanduser('~')
     common.rc_path = os.path.join(common.home, '.azote-palettes-rc')
-    common.path = os.path.dirname(os.path.abspath(__file__))
-    common.images_path = os.path.join(common.path, 'images')
+    common.resources_path = os.path.dirname(os.path.abspath(__file__))
+    common.images_path = os.path.join(common.resources_path, 'images')
     common.rc = RuntimeConfig()
 
     screen = Gdk.Screen.get_default()

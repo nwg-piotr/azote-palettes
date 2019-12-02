@@ -2,7 +2,7 @@
 # _*_ coding: utf-8 _*_
 
 home = ''
-path = ''
+resources_path = ''
 rc_path = ''
 images_path = ''
 image_path = ''

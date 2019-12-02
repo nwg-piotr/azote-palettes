@@ -1,6 +1,6 @@
 # Maintainer: Piotr Miller <nwg.piotr@gmail.com>
 pkgname=('azote-palettes')
-pkgver=0.2.3
+pkgver=1.0.0
 pkgrel=1
 pkgdesc="Colour palette creator and colour names dictionary"
 arch=('x86_64')
@@ -10,7 +10,7 @@ depends=('python' 'python-setuptools' 'python-gobject' 'python-pillow' 'python-c
 
 source=("https://github.com/nwg-piotr/azote-palettes/archive/v"$pkgver".tar.gz")
 
-md5sums=('902600a7d97d5d48d8dc066eb95e9a43')
+md5sums=('3f1385e6111639c9d25b926d72032df5')
 
 package() {
   install -D -m 755 "$pkgname"-"$pkgver"/dist/azote-palettes "$pkgdir"/usr/bin/azote-palettes

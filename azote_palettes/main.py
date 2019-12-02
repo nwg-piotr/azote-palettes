@@ -21,11 +21,12 @@ from colorthief import ColorThief
 import common
 from color_tools import get_colour_name, hex_to_rgb, rgb_to_cmyk
 
-clipboard_file = os.path.join(tempfile.gettempdir(), 'azote-clipboard.png')
-clipboard_file_scaled = os.path.join(tempfile.gettempdir(), 'azote-clipboard-scaled.png')
+tempdir = '/tmp' if platform.system() == 'Darwin' else tempfile.gettempdir()
+clipboard_file = os.path.join(tempdir, 'azote-clipboard.png')
+clipboard_file_scaled = os.path.join(tempdir, 'azote-clipboard-scaled.png')
 
 # I have no Mac in range to check if it works there!
-image_grab = platform.system().upper() == 'WINDOWS' or platform.system().upper() == 'DARWIN'
+image_grab = platform.system() == 'Windows' or platform.system() == 'Darwin'
 
 if image_grab:
     from PIL import ImageGrab

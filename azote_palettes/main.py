@@ -111,7 +111,7 @@ class Preview(Gtk.VBox):
         self.palette_preview = PalettePreview()
         self.add(self.palette_preview)
 
-    def refresh(self, clip=False):
+    def refresh(self):
         self.label.set_text(common.image_path)
         scale_image(common.image_path)
         self.image.set_from_file(clipboard_file_scaled)
@@ -264,7 +264,7 @@ class Toolbar(Gtk.HBox):
         response = dialog.run()
         if response == 1:
             common.image_path = dialog.get_filename()
-            common.preview.refresh(clip=False)
+            common.preview.refresh()
             common.last_folder = os.path.split(common.image_path)[0]
         dialog.destroy()
 
@@ -277,7 +277,7 @@ class Toolbar(Gtk.HBox):
             common.preview.image.set_from_file(clipboard_file)
             common.preview.label.set_text(clipboard_file)
             common.image_path = clipboard_file
-            common.preview.refresh(clip=True)
+            common.preview.refresh()
 
 
 class GUI:

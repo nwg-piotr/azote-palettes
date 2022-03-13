@@ -14,6 +14,7 @@ md5sums=('3f1385e6111639c9d25b926d72032df5')
 
 package() {
   install -D -t "$pkgdir"/usr/share/"$pkgname" "$pkgname"-"$pkgver"/dist/azote-palettes.svg
+  install -D -t "$pkgdir"/usr/share/pixmaps "$pkgname"-"$pkgver"/dist/azote-palettes.svg
   install -D -t "$pkgdir"/usr/share/applications "$pkgname"-"$pkgver"/dist/azote-palettes.desktop
   install -Dm 644 "$pkgname"-"$pkgver"/LICENSE-COLORTHIEF "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE-COLORTHIEF"
   cd "$srcdir/$pkgname-$pkgver"

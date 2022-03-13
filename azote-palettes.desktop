@@ -1,0 +1,15 @@
+[Desktop Entry]
+Encoding=UTF-8
+Type=Application
+Exec=azote-palettes
+Name=Azote Palettes
+Terminal=false
+GenericName=Azote palette creator
+GenericName[pl]=Kreator palet Azote
+Categories=Utility;Graphics;Development;
+Icon=/usr/share/azote-palettes/azote-palettes.svg
+Comment=Create palettes, find colours in dictionaries
+Comment[pl]=Twórz palety, znajdź kolory w słownikach
+Keywords=background;desktop;graphics;colours; colors;
+Name[pl]=Azote Palety
+MimeType=image/jpeg;image/jpg;image/png;

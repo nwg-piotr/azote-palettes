@@ -15,7 +15,9 @@ setup(
     description='Colour palette creator and colour names dictionary',
     packages=find_packages(),
     include_package_data=True,
-    package_data={},
+    package_data={
+        "": ["images/*"]
+    },
     url='https://github.com/nwg-piotr/azote-palettes',
     license='GPL3',
     author='Piotr Miller',

@@ -20,8 +20,9 @@ gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, GdkPixbuf, Gdk, GLib
 from PIL import Image
 from colorthief import ColorThief
-import common
 from color_tools import get_colour_name, hex_to_rgb, rgb_to_cmyk
+
+from azote_palettes.common import *
 
 tempdir = '/tmp' if platform.system() == 'Darwin' else tempfile.gettempdir()
 clipboard_file = os.path.join(tempdir, 'azote-clipboard.png')

@@ -7,6 +7,8 @@ Author: Piotr Miller
 e-mail: nwg.piotr@gmail.com
 Website: https://github.com/nwg-piotr/azote-palettes
 License: GPL-3.0-or-later
+
+Depends on: 'python-colorthief'
 """
 import sys
 import os
@@ -290,6 +292,7 @@ class GUI:
             icon = GdkPixbuf.Pixbuf.new_from_file(os.path.join(common.images_path, 'azote-palettes.svg'))
         window.set_default_icon(icon)
         window.connect_after('destroy', destroy)
+        window.connect("key-release-event", handle_keyboard)
 
         common.preview = Preview()
         window.add(common.preview)
@@ -321,6 +324,11 @@ class RuntimeConfig(object):
 
         with open(common.rc_path, 'w') as f:
             json.dump(rc, f, indent=2)
+
+
+def handle_keyboard(window, event):
+    if event.type == Gdk.EventType.KEY_RELEASE and event.keyval == Gdk.KEY_Escape:
+        window.close()
 
 
 def main():

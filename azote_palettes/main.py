@@ -16,6 +16,7 @@ import platform
 import tempfile
 import gi
 import json
+
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, GdkPixbuf, Gdk, GLib
 from PIL import Image
@@ -72,7 +73,7 @@ def color_image(size, color):
     data = image.tobytes()
     w, h = image.size
     data = GLib.Bytes.new(data)
-    return GdkPixbuf.Pixbuf.new_from_bytes(data, GdkPixbuf.Colorspace.RGB, False, 8, w, h, w *3)
+    return GdkPixbuf.Pixbuf.new_from_bytes(data, GdkPixbuf.Colorspace.RGB, False, 8, w, h, w * 3)
 
 
 def palette(image_path):
@@ -98,7 +99,7 @@ class Preview(Gtk.VBox):
         self.image = Gtk.Image()
         scale_image(common.image_path)
         self.image.set_from_file(clipboard_file_scaled)
-        
+
         self.set_spacing(5)
         self.set_border_width(15)
         self.pack_start(self.image, True, True, 0)
@@ -194,7 +195,8 @@ class PalettePreview(Gtk.VBox):
         else:
             label_pantone = 'Nearest Pantone: {}'.format(closest_pantone)
 
-        self.label.set_markup('{} | {} {} {} {} | {} | {}'.format(button.get_label(), c, m, y, k, label_name, label_pantone))
+        self.label.set_markup(
+            '{} | {} {} {} {} | {} | {}'.format(button.get_label(), c, m, y, k, label_name, label_pantone))
 
 
 class Toolbar(Gtk.HBox):
@@ -237,13 +239,13 @@ class Toolbar(Gtk.HBox):
 
         menu.show_all()
         menu.popup_at_widget(button, Gdk.Gravity.WEST, Gdk.Gravity.SOUTH_WEST, None)
-        
+
     def on_size_menu_item(self, item, button, number):
         common.rc.num_colors = number
         common.rc.save()
         common.preview.refresh()
         button.set_label("Palette size ({})".format(common.rc.num_colors))
-    
+
     def on_open_button(self, button):
         dialog = Gtk.FileChooserDialog(title='Select image', parent=button.get_toplevel(),
                                        action=Gtk.FileChooserAction.OPEN)
@@ -318,7 +320,7 @@ class RuntimeConfig(object):
                 self.num_colors = int(rc['num_colors'])
         except FileNotFoundError:
             self.save()
-            
+
     def save(self):
         rc = {'preview_max_width': str(self.preview_max_width),
               'num_colors': str(self.num_colors)}

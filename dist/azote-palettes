@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
 
-cd /usr/lib/python3.8/site-packages/azote_palettes
+LIB=$(python3 -Ic "from sysconfig import get_path; print(get_path('platlib'))")
+cd $LIB/azote_palettes
 exec /usr/bin/python3 main.py "$@"

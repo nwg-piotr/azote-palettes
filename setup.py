@@ -13,7 +13,7 @@ setup(
     name='azote-palettes',
     version='1.0.1',
     description='Colour palette creator and colour names dictionary',
-    packages=['azote_palettes'],
+    packages=['azote_palettes', 'azote_palettes.common'],
     include_package_data=True,
     package_data={
         "": ["images/*"]

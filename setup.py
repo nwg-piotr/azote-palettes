@@ -2,7 +2,7 @@
 
 import os
 
-from setuptools import setup, find_packages
+from setuptools import setup
 
 
 def read(f_name):
@@ -13,9 +13,8 @@ setup(
     name='azote-palettes',
     version='1.0.1',
     description='Colour palette creator and colour names dictionary',
-    packages=find_packages(),
+    packages=['azote_palettes'],
     include_package_data=True,
-    py_modules=['azote_palettes.common'],
     package_data={
         "": ["images/*"]
     },

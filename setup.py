@@ -15,7 +15,7 @@ setup(
     description='Colour palette creator and colour names dictionary',
     packages=find_packages(),
     include_package_data=True,
-    py_modules=['common'],
+    py_modules=['azote_palettes.common'],
     package_data={
         "": ["images/*"]
     },

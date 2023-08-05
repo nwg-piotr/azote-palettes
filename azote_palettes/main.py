@@ -57,7 +57,7 @@ def scale_image(path):
         if w > common.rc.preview_max_width or h > preview_max_height:
             w = w * ratio
             h = h * ratio
-            pillow_image.thumbnail((w, h), Image.ANTIALIAS)
+            pillow_image.thumbnail((w, h), Image.NEAREST)
         pillow_image.save(clipboard_file_scaled)
     except Exception as e:
         print(e)

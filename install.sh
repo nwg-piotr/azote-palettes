@@ -24,5 +24,5 @@ python -m build --wheel --no-isolation
 
 python -m installer dist/*.whl
 
-install -Dm 644 -t "/usr/share/applications" "$PROGRAM_NAME.desktop"
-install -Dm 644 -t "/usr/share/pixmaps" "$PROGRAM_NAME.svg"
+install -Dm 644 -t "/usr/share/applications" "dist/$PROGRAM_NAME.desktop"
+install -Dm 644 -t "/usr/share/pixmaps" "dist/$PROGRAM_NAME.svg"

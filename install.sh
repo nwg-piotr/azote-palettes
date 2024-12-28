@@ -26,3 +26,15 @@ opts+=("$@")
 : ${prefix:="/usr"}
 
 python3 setup.py install --optimize=1 "${opts[@]}"
+#mkdir -p $prefix/share/pixmaps/ $prefix/share/applications/
+#cp nwg-panel.svg $prefix/share/pixmaps/
+#cp nwg-shell.svg $prefix/share/pixmaps/
+#cp nwg-processes.svg $prefix/share/pixmaps/
+#cp nwg-panel-config.desktop $prefix/share/applications/
+#cp nwg-processes.desktop $prefix/share/applications/
+#
+#install -Dm 644 -t "/usr/share/licenses/nwg-panel" LICENSE
+#install -Dm 644 -t "/usr/share/doc/nwg-panel" README.md
+
+cp dist/azote-palettes.svg /usr/share/pixmaps/
+cp dist/azote-palettes.desktop /usr/share/applications/

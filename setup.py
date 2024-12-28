@@ -26,7 +26,7 @@ setup(
     install_requires=[],
     entry_points={
         'gui_scripts': [
-            'azote-palettes = azote-palettes.azote-palettes:main'
+            'azote-palettes = azote_palettes.main:main'
         ]
     }
 

@@ -23,5 +23,11 @@ setup(
     author='Piotr Miller',
     author_email='nwg.piotr@gmail.com',
     python_requires='>=3.4.0',
-    install_requires=[]
+    install_requires=[],
+    entry_points={
+        'gui_scripts': [
+            'azote-palettes = azote_palettes.azote_palettes:main'
+        ]
+    }
+
 )

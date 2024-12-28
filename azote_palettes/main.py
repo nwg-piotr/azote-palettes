@@ -23,8 +23,6 @@ from PIL import Image
 from colorthief import ColorThief
 from azote_palettes.color_tools import get_colour_name, hex_to_rgb, rgb_to_cmyk
 
-import common
-
 tempdir = '/tmp' if platform.system() == 'Darwin' else tempfile.gettempdir()
 clipboard_file = os.path.join(tempdir, 'azote-clipboard.png')
 clipboard_file_scaled = os.path.join(tempdir, 'azote-clipboard-scaled.png')

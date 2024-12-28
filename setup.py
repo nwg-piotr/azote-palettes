@@ -11,7 +11,7 @@ def read(f_name):
 
 setup(
     name='azote-palettes',
-    version='1.0.1',
+    version='1.0.2',
     description='Colour palette creator and colour names dictionary',
     packages=find_packages(),
     include_package_data=True,

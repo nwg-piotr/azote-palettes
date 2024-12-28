@@ -1,40 +1,28 @@
-#!/usr/bin/env bash
+PROGRAM_NAME="azote-palettes"
+MODULE_NAME="azote_palettes"
+SITE_PACKAGES="$(python3 -c "import sysconfig; print(sysconfig.get_paths()['purelib'])")"
+PATTERN="$SITE_PACKAGES/$MODULE_NAME*"
 
-if [ "$EUID" -ne 0 ]; then
-  echo "Please run as root"
-  exit
-fi
-
-prefix=
-opts=()
-
-while true; do
-  case "$1" in
-    --prefix=*)
-      opts+=("$1")
-      eval "prefix=${1##--prefix=}"
-      shift
-      ;;
-    *)
-      break
-      ;;
-  esac
+# Remove from site_packages
+for path in $PATTERN; do
+    if [ -e "$path" ]; then
+        echo "Removing $path"
+        rm -r "$path"
+    fi
 done
 
-opts+=("$@")
+# Remove launcher scripts
+filenames=("/usr/bin/azote-palettes")
 
-: ${prefix:="/usr"}
+for filename in "${filenames[@]}"; do
+  rm -f "$filename"
+  echo "Removing -f $filename"
+done
 
-python3 setup.py install --optimize=1 "${opts[@]}"
-#mkdir -p $prefix/share/pixmaps/ $prefix/share/applications/
-#cp nwg-panel.svg $prefix/share/pixmaps/
-#cp nwg-shell.svg $prefix/share/pixmaps/
-#cp nwg-processes.svg $prefix/share/pixmaps/
-#cp nwg-panel-config.desktop $prefix/share/applications/
-#cp nwg-processes.desktop $prefix/share/applications/
-#
-#install -Dm 644 -t "/usr/share/licenses/nwg-panel" LICENSE
-#install -Dm 644 -t "/usr/share/doc/nwg-panel" README.md
+echo "Building"
+python -m build --wheel --no-isolation
 
-cp dist/azote-palettes.svg /usr/share/pixmaps/
-cp dist/azote-palettes.desktop /usr/share/applications/
+python -m installer dist/*.whl
+
+install -Dm 644 -t "/usr/share/applications" "$PROGRAM_NAME.desktop"
+install -Dm 644 -t "/usr/share/pixmaps" "$PROGRAM_NAME.svg"
